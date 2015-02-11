@@ -1,0 +1,15 @@
+
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-opacity: 0;
+}
+
+.split-pane *.split-pane-divider {
+    -fx-padding: 0 1 0 1;
+    -fx-opacity: 0;
+}
+
+.text-area {
+    -fx-border-radius: 5 5 5 5;
+    -fx-border-color: #cfcfcf;
+}

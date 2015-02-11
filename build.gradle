@@ -1,0 +1,13 @@
+apply from: 'javafx.plugin'
+apply plugin: 'idea'
+apply plugin: 'maven'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	compile 'com.caucho:hessian:4.0.38'
+	compile 'org.xerial:sqlite-jdbc:3.8.7'
+
+}
