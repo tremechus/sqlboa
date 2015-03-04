@@ -10,13 +10,16 @@ public class StatementResult {
 	private List<ResultRow> rowList;
 	private int row;
 	
-	public StatementResult(int totalCount, String[] colNames) {
+	public StatementResult(String[] colNames) {
 		this.colNames = colNames;
-		this.totalCount = totalCount;
-		
+
 		rowList = new LinkedList<>();
 		row = 0;
 	}
+
+    public void setTotalCount(int totalCount) {
+        this.totalCount = totalCount;
+    }
 
 	public void add(ResultRow row) {
 		rowList.add(row);

@@ -10,11 +10,13 @@ public class BoaStatement implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+    private static final String PREFIX_QUERY_PLAN = "explain query plan ";
+
 	private String name;
-	private String originalSql;
 	private String sql;
 	private List<SqlParam> paramList = new LinkedList<>();
     private boolean showTiming;
+    private boolean showQueryPlan;
     private String usingDb;
 
     public BoaStatement(String name, String sql) {
@@ -26,11 +28,17 @@ public class BoaStatement implements Serializable {
 		this.sql = sql;
         this.showTiming = showTiming;
 
-		originalSql = sql;
-
         captureUsing();
         captureBindParams();
 	}
+
+    public void setShowQueryPlan() {
+        if (!sql.startsWith(PREFIX_QUERY_PLAN)) {
+            sql = PREFIX_QUERY_PLAN + sql;
+        }
+
+        name = name + ": Plan";
+    }
 
     private void captureUsing() {
         if (!sql.toLowerCase().startsWith("using ")) {
@@ -210,15 +218,6 @@ public class BoaStatement implements Serializable {
         }
 	}
 	
-	public String getKey() {
-		return originalSql;
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof BoaStatement && ((BoaStatement)obj).getKey().equals(getKey());
-	}
-
 	public List<SqlParam> getParamList() {
 		return paramList;
 	}
@@ -232,48 +231,6 @@ public class BoaStatement implements Serializable {
 				}
 			}
 		}
-	}
-	
-	public boolean equalish(BoaStatement other) {
-
-		// Was the value appended to or truncated on either end
-		if (getKey().indexOf(other.getKey()) >= 0 || other.getKey().indexOf(getKey()) >= 0) {
-			return true;
-		}
-
-		int firstChange = firstChange(getKey(), other.getKey());
-		int lastChange = lastChange(getKey(), other.getKey());
-
-		// Subtracted from
-		if (firstChange > other.getKey().length()-lastChange) {
-			return true;
-		}
-		
-		// Added to
-		if (firstChange > getKey().length()-lastChange) {
-			return true;
-		}
-		
-		return false;
-	}
-	
-	private int firstChange(String left, String right) {
-		for (int i = 0; i < left.length() && i < right.length(); i++) {
-			if (left.charAt(i) != right.charAt(i)) {
-				return i;
-			}
-		}
-		
-		return -1;
-	}
-	
-	private int lastChange(String left, String right) {
-		for (int i = 0; left.length()-i-1 >= 0 && right.length()-i-1 >= 0; i++) {
-			if (left.charAt(left.length()-i-1) != right.charAt(right.length()-i-1)) {
-				return i;
-			}
-		}
-		return -1;
 	}
 	
 }

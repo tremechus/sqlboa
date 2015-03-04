@@ -28,12 +28,7 @@
               <items>
                   <VBox maxHeight="1.7976931348623157E308">
                      <children>
-                        <TreeView id="connectionTree" fx:id="connectionTree" maxHeight="1.7976931348623157E308" style="-fx-background-radius: 5 5 5 5; -fx-padding: 10 10 10 10;" VBox.vgrow="ALWAYS">
-                           <VBox.margin>
-                              <Insets bottom="5.0" top="5.0" />
-                           </VBox.margin>
-                        </TreeView>
-                        <HBox alignment="CENTER_RIGHT" VBox.vgrow="NEVER">
+                        <HBox alignment="CENTER_LEFT" VBox.vgrow="NEVER">
                            <children>
                               <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
@@ -66,6 +61,11 @@
                               </Button>
                            </children>
                         </HBox>
+                        <TreeView id="connectionTree" fx:id="connectionTree" maxHeight="1.7976931348623157E308" style="-fx-background-radius: 5 5 5 5; -fx-padding: 10 10 10 10;" VBox.vgrow="ALWAYS">
+                           <VBox.margin>
+                              <Insets bottom="5.0" top="5.0" />
+                           </VBox.margin>
+                        </TreeView>
                      </children>
                      <padding>
                         <Insets left="5.0" right="5.0" top="5.0" />
@@ -80,22 +80,7 @@
                                     <TextArea prefHeight="200.0" prefWidth="200.0" />
                                  </content>
                             </Tab>
-                          </tabs>
-                           <padding>
-                              <Insets bottom="5.0" left="5.0" right="5.0" />
-                           </padding>
-                        </TabPane>
-                        <HBox alignment="CENTER_LEFT">
-                           <children>
-                              <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@icon/filenew.png" />
-                                 </image>
-                                 <HBox.margin>
-                                    <Insets right="5.0" />
-                                 </HBox.margin>
-                              </ImageView>
-                              <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#handleAddNewSheet" text="Button">
+                              <Tab closable="false">
                                  <graphic>
                                     <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                                        <image>
@@ -103,12 +88,12 @@
                                        </image>
                                     </ImageView>
                                  </graphic>
-                              </Button>
-                           </children>
+                              </Tab>
+                          </tabs>
                            <padding>
-                              <Insets left="5.0" />
+                              <Insets bottom="5.0" left="5.0" right="5.0" />
                            </padding>
-                        </HBox>
+                        </TabPane>
                      </children>
                   </VBox>
               </items>

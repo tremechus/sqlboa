@@ -30,6 +30,7 @@ import sqlboa.modelview.TypeTreeNode;
 import sqlboa.modelview.TreeItemType;
 import sqlboa.parser.StatementCompletionListener;
 import sqlboa.state.AppState;
+import sqlboa.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -185,6 +186,8 @@ public class MainController implements StatementCompletionListener {
     }
 
     private void initSheetTabs() {
+        // Grab the + tab
+        Tab addTab = sheetTabs.getTabs().get(sheetTabs.getTabs().size()-1);
         sheetTabs.getTabs().clear();
 
         if (appState.getDocumentList().size() > 0) {
@@ -195,6 +198,23 @@ public class MainController implements StatementCompletionListener {
             addSheet(createDefaultDocument());
         }
 
+        addTab.setOnSelectionChanged(new EventHandler<Event>() {
+            boolean updating = false;
+
+            @Override
+            public void handle(Event event) {
+                if (updating) {
+                    return;
+                }
+
+                updating = true;
+                handleAddNewSheet();
+                updating = false;
+
+            }
+        });
+
+        sheetTabs.getTabs().add(addTab);
     }
 
     public Tab addSheet(final BoaDocument doc) {
@@ -208,6 +228,9 @@ public class MainController implements StatementCompletionListener {
                 }
                 if (event.isControlDown() && event.getCode() == KeyCode.R) {
                     executeDocument(true);
+                }
+                if (event.isControlDown() && event.getCode() == KeyCode.E) {
+                    explainCurrentContext();
                 }
             }
         });
@@ -234,6 +257,51 @@ public class MainController implements StatementCompletionListener {
         }
 
         return tab;
+    }
+
+    private void explainCurrentContext() {
+        Database db = getActiveDatabase();
+        if (db == null) {
+            Dialog.showError("Alert", "No active connection");
+            return;
+        }
+
+        // Current word
+        DocumentTab currentTab = (DocumentTab) sheetTabs.getSelectionModel().getSelectedItem();
+        if (currentTab == null) {
+            // Not sure how, but whatever
+            return;
+        }
+
+        TextArea textArea = (TextArea) currentTab.getContent();
+        String word = StringUtil.findCurrentWord(textArea.getText(), textArea.getCaretPosition());
+        if (word == null) {
+            return;
+        }
+
+        // Reserved word?
+        switch (word.toLowerCase()) {
+            case "select":
+            case "from":
+            case "where":
+                BoaStatement statement = currentTab.document.getStatementAt(textArea.getCaretPosition());
+                if (statement == null || !statement.isValid()) {
+                    return;
+                }
+
+                statement.setShowQueryPlan();
+
+                boa.executeStatement(db, null, statement, this);
+                return;
+        }
+
+        // Table in current db?
+        for (String tableName : db.getTableList()) {
+            if (word.equalsIgnoreCase(tableName)) {
+                boa.executeStatement(db, null, new BoaStatement("Table: " + tableName, "PRAGMA table_info(" + tableName +")", false), this);
+                return;
+            }
+        }
     }
 
     public void addResult(String name, String detail, Node content, Object data) {
@@ -378,18 +446,21 @@ public class MainController implements StatementCompletionListener {
             rows.add(row);
         }
 
-        String plus = result.getResult().getCount() >= Configuration.MAX_LOAD_RECORDS ? "+" : "";
-        String detail = result.getStatement().getShowTiming() ? " (" + result.getResult().getCount() + plus + " in " + result.getDuration()+ "ms)" : "";
+        String detail = result.getStatement().getShowTiming() ? " (" + result.getResult().getTotalCount() + " in " + result.getDuration()+ "ms)" : "";
 
         addResult(result.getStatement().getName(), detail, table, result);
 
     }
 
     public void handleAddNewSheet() {
+        Tab addTab = sheetTabs.getTabs().remove(sheetTabs.getTabs().size()-1);
+
         Tab newTab = addSheet(createDefaultDocument());
         sheetTabs.getSelectionModel().select(newTab);
         appState.save();
         newTab.getContent().requestFocus();
+
+        sheetTabs.getTabs().add(addTab);
     }
 
     public void handleAboutMenu() {
@@ -453,17 +524,18 @@ public class MainController implements StatementCompletionListener {
 
         Object details = item.getValue();
         if (details instanceof ConnectionTreeNode) {
-            System.out.println("Acti: details)");
             return ((ConnectionTreeNode) details).db;
         }
 
         if (details instanceof TypeTreeNode) {
-            System.out.println("Type: " + details);
             return ((TypeTreeNode) details).db;
         }
 
-        // TODO: Default to first?
-        return appState.getDatabaseList().get(0);
+        if (details instanceof ItemTreeNode) {
+            return ((ItemTreeNode)details).db;
+        }
+
+        return null;
     }
 
     public void executeDocument(boolean asScript) {
@@ -528,7 +600,7 @@ public class MainController implements StatementCompletionListener {
             }
         }
 
-        Dialog.showWarning("Error", "Database '" + statement.getUsingDb() + "' not found", stage.getScene().getWindow() );
+        Dialog.showWarning("Error", "Database '" + statement.getUsingDb() + "' not found", stage.getScene().getWindow());
 
         return null;
     }

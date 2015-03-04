@@ -80,7 +80,6 @@ public abstract class DBConnection {
 				}
 			}
 			
-			stmt.setMaxRows(Configuration.MAX_LOAD_RECORDS);
 			if (stmt.execute()) {
 				ResultSet resultSet = stmt.getResultSet();
 				ResultSetMetaData meta = resultSet.getMetaData();
@@ -90,29 +89,32 @@ public abstract class DBConnection {
 					colNames[i] = meta.getColumnName(i+1);
 				}
 
-                int totalCount = 0;
-//                if (resultSet.last()) {
-//                    totalCount = resultSet.getRow();
-//                    resultSet.beforeFirst();
-//                }
+				StatementResult result = new StatementResult(colNames);
 
-				StatementResult result = new StatementResult(totalCount, colNames);
-				
-				while (resultSet.next()) {
+                // Grab the current page of data
+                int rowCount = 0;
+				for (; rowCount < Configuration.PAGE_SIZE && resultSet.next(); rowCount++) {
 					Object[] colData = new Object[colNames.length];
-					for (int i = 0; i < colData.length; i++) {
-						colData[i] = resultSet.getObject(i+1);
+					for (int j = 0; j < colData.length; j++) {
+						colData[j] = resultSet.getObject(j+1);
 					}
-					ResultRow row = new ResultRow(0, colData);
+					ResultRow row = new ResultRow(rowCount, colData);
 	
 					result.add(row);
 				}
-	
-				return result;
+
+                // Skip to the end of the cursor to get total count
+                while (resultSet.next()) {
+                    rowCount++;
+                }
+
+                result.setTotalCount(rowCount);
+
+                return result;
 				
 			} else {
 				
-				StatementResult result = new StatementResult(1, new String[]{"Status"});
+				StatementResult result = new StatementResult(new String[]{"Status"});
 				result.add(new ResultRow(-1, new Object[]{stmt.getUpdateCount() + " updated"}));
 				
 				return result;
