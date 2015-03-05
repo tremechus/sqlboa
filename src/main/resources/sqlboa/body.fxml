@@ -22,7 +22,7 @@
           </Menu>
         </menus>
       </MenuBar>
-      <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" style="-fx-background-color: dddd;" VBox.vgrow="ALWAYS">
+      <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" style="-fx-background-color: #dddddd;" VBox.vgrow="ALWAYS">
         <items>
             <SplitPane dividerPositions="0.29797979797979796" prefHeight="160.0" prefWidth="200.0" style="-fx-background-color: dddddd;">
               <items>
@@ -98,22 +98,11 @@
                   </VBox>
               </items>
             </SplitPane>
-            <TabPane id="resultTabs" fx:id="resultTabs" prefHeight="200.0" prefWidth="200.0">
-              <tabs>
-                <Tab text="Results">
-                  <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                           <children>
-                              <Pane layoutX="129.0" layoutY="-55.0" prefHeight="139.0" prefWidth="578.0" style="-fx-background-color: #ffffff;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                           </children>
-                        </AnchorPane>
-                  </content>
-                </Tab>
-              </tabs>
+            <SplitPane fx:id="resultsContainer" prefHeight="160.0" prefWidth="200.0" style="-fx-background-color: #dddddd;">
                <padding>
                   <Insets bottom="5.0" left="5.0" right="5.0" />
                </padding>
-            </TabPane>
+            </SplitPane>
         </items>
       </SplitPane>
    </children>

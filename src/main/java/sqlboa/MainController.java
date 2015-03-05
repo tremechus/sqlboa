@@ -11,16 +11,15 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import name.antonsmirnov.javafx.dialog.Dialog;
 import sqlboa.db.SQLiteConnection;
 import sqlboa.model.*;
@@ -36,7 +35,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MainController implements StatementCompletionListener {
@@ -51,13 +53,14 @@ public class MainController implements StatementCompletionListener {
     private TabPane sheetTabs;
 
     @FXML
-    private TabPane resultTabs;
+    private SplitPane resultsContainer;
 
     private SQLBoa boa;
     private AppState appState;
     private Stage stage;
     private FileChooser fileChooser = new FileChooser();
     private Application app;
+    private List<ResultPanel> resultPanelList = new LinkedList<ResultPanel>();
 
     public void init(Application app, SQLBoa boa, AppState appState, Stage stage) {
         this.stage = stage;
@@ -77,9 +80,13 @@ public class MainController implements StatementCompletionListener {
     }
 
     private void initResultTabs() {
-        resultTabs.getTabs().clear();
+        resultsContainer.getItems().clear();
 
-        addResult("Results", null, new TextArea(), null);
+        addDefaultResultPanel();
+    }
+
+    private void addDefaultResultPanel() {
+        addResult("Results", null, null, null);
     }
 
     private void initConnectionTree() {
@@ -314,32 +321,36 @@ public class MainController implements StatementCompletionListener {
         }
 
         if (content == null) {
-            TextArea emptyPanel = new TextArea();
-            emptyPanel.setEditable(false);
+            Label emptyPanel = new Label();
             emptyPanel.setFocusTraversable(false);
 
             content = emptyPanel;
         }
 
-        ResultTab tab = null;
-        for (Tab t : resultTabs.getTabs()) {
-            ResultTab currTab = (ResultTab) t;
-            if (name.equalsIgnoreCase(currTab.name)) {
-                tab = currTab;
-                break;
+        ResultPanel tab = null;
+        for (ResultPanel panel : resultPanelList) {
+            if (name.equalsIgnoreCase(panel.name)) {
+                tab = panel;
             }
         }
 
         if (tab == null) {
-            tab = new ResultTab(name, data);
-            resultTabs.getTabs().add(tab);
+            tab = new ResultPanel(name);
+            resultsContainer.getItems().add(tab.panel);
+
+            resultPanelList.add(tab);
         }
 
-        tab.setText(name + detail);
+        tab.controller.update(name, detail, content, data);
 
-        tab.setContent(content);
+        // Divider all result panels evenly
+        double[] dividerPositions = new double[resultPanelList.size()];
+        double ratio = 1.0 / Math.max(resultPanelList.size(), 1);
+        for (int i = 0; i < dividerPositions.length; i++) {
+            dividerPositions[i] = (1 + i) * ratio;
+        }
 
-        resultTabs.getSelectionModel().select(tab);
+        resultsContainer.setDividerPositions(dividerPositions);
     }
 
     public void handleRemoveConnection() {
@@ -446,7 +457,7 @@ public class MainController implements StatementCompletionListener {
             rows.add(row);
         }
 
-        String detail = result.getStatement().getShowTiming() ? " (" + result.getResult().getTotalCount() + " in " + result.getDuration()+ "ms)" : "";
+        String detail = result.getStatement().getShowTiming() ? " (" + NumberFormat.getNumberInstance().format(result.getResult().getTotalCount()) + " in " + NumberFormat.getNumberInstance().format(result.getDuration())+ "ms)" : "";
 
         addResult(result.getStatement().getName(), detail, table, result);
 
@@ -678,13 +689,35 @@ public class MainController implements StatementCompletionListener {
         }
     };
 
-    private static class ResultTab extends Tab {
+    private class ResultPanel implements ResultPanelController.OnCloseListener {
         private String name;
-        private Object data;
+        private Node panel;
+        private ResultPanelController controller;
 
-        public ResultTab(String name, Object data) {
+        public ResultPanel(String name) {
             this.name = name;
-            this.data = data;
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("resultpane.fxml"));
+
+            try {
+                panel = loader.load();
+                controller = loader.getController();
+
+                controller.setOnCloseListener(this);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onClose() {
+            resultPanelList.remove(this);
+
+            resultsContainer.getItems().removeAll(panel);
+
+            if (resultPanelList.size() == 0) {
+                addDefaultResultPanel();
+            }
         }
     }
 }
