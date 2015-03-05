@@ -73,6 +73,12 @@ public class MainController implements StatementCompletionListener {
         initSheetTabs();
         initMenus();
 
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                sheetTabs.getTabs().get(0).getContent().requestFocus();
+            }
+        });
     }
 
     private void initMenus() {
@@ -327,21 +333,21 @@ public class MainController implements StatementCompletionListener {
             content = emptyPanel;
         }
 
-        ResultPanel tab = null;
+        ResultPanel resultPanel = null;
         for (ResultPanel panel : resultPanelList) {
             if (name.equalsIgnoreCase(panel.name)) {
-                tab = panel;
+                resultPanel = panel;
             }
         }
 
-        if (tab == null) {
-            tab = new ResultPanel(name);
-            resultsContainer.getItems().add(tab.panel);
+        if (resultPanel == null) {
+            resultPanel = new ResultPanel(name);
+            resultsContainer.getItems().add(resultPanel.panel);
 
-            resultPanelList.add(tab);
+            resultPanelList.add(resultPanel);
         }
 
-        tab.controller.update(name, detail, content, data);
+        resultPanel.controller.update(name, detail, content, data);
 
         // Divider all result panels evenly
         double[] dividerPositions = new double[resultPanelList.size()];
@@ -413,7 +419,6 @@ public class MainController implements StatementCompletionListener {
         for (int i = 0; i < result.getResult().getColumnCount(); i++) {
             String colName = result.getResult().getColumnName(i);
 
-            // FIXME:
             final int idx = i;
             TableColumn<ResultRow, String> col = new TableColumn<>(colName);
             col.setCellValueFactory(p -> {
