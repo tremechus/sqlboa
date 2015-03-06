@@ -21,7 +21,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import name.antonsmirnov.javafx.dialog.Dialog;
+import sqlboa.db.RemoteConnection;
 import sqlboa.db.SQLiteConnection;
+import sqlboa.db.VolatileSQLiteConnection;
 import sqlboa.model.*;
 import sqlboa.modelview.ConnectionTreeNode;
 import sqlboa.modelview.ItemTreeNode;
@@ -30,6 +32,7 @@ import sqlboa.modelview.TreeItemType;
 import sqlboa.parser.StatementCompletionListener;
 import sqlboa.state.AppState;
 import sqlboa.util.StringUtil;
+import sqlboa.view.PopupDialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,6 +76,7 @@ public class MainController implements StatementCompletionListener {
         initSheetTabs();
         initMenus();
 
+        // Initial focus
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
@@ -103,12 +107,6 @@ public class MainController implements StatementCompletionListener {
         connectionTree.setRoot(root);
         connectionTree.setShowRoot(false);
 
-        // Initial state
-        if (dbList == null || dbList.size() == 0) {
-            root.getChildren().add(new TreeItem<>("No connections"));
-            return;
-        }
-
         // Construct tree
         Collections.sort(dbList);
 
@@ -132,9 +130,14 @@ public class MainController implements StatementCompletionListener {
             }
         }
 
+        // Scratch connection
+        TreeItem branch = constructDBBranch(new Database("Scratch", new VolatileSQLiteConnection()));
+        root.getChildren().add(branch);
+
+        // User connections
         TreeItem selectedBranch = null;
         for (Database db : dbList) {
-            TreeItem branch = constructDBBranch(db);
+            branch = constructDBBranch(db);
             root.getChildren().add(branch);
 
             if (appState.getDefaultDatabase().equals(db.getName())) {
@@ -481,30 +484,18 @@ public class MainController implements StatementCompletionListener {
 
     public void handleAboutMenu() {
 
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("about.fxml"));
-            Parent root = loader.load();
+        new PopupDialog(stage, "dialog_about") {
+            @Override
+            protected void configure(Scene scene) {
+                Label label = (Label) scene.lookup("#versionLabel");
+                label.setText("v" + Configuration.VERSION);
 
-            final Stage dialog = new Stage();
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.initOwner(stage);
-            Scene dialogScene = new Scene(root);
-
-            Label label = (Label) dialogScene.lookup("#versionLabel");
-            label.setText("v" + Configuration.VERSION);
-
-            Hyperlink siteUrl = (Hyperlink) dialogScene.lookup("#siteUrl");
-            siteUrl.setOnAction(e -> {
-                HostServicesFactory.getInstance(app).showDocument("http://sqlboa.com");
-            });
-
-            dialog.setScene(dialogScene);
-            dialog.sizeToScene();
-
-            dialog.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+                Hyperlink siteUrl = (Hyperlink) scene.lookup("#siteUrl");
+                siteUrl.setOnAction(e -> {
+                    HostServicesFactory.getInstance(app).showDocument("http://sqlboa.com");
+                });
+            }
+        }.show();
     }
 
     public void handleExitMenu() {
@@ -512,6 +503,58 @@ public class MainController implements StatementCompletionListener {
     }
 
     public void handleAddNewConnection() {
+
+        new PopupDialog(stage, "dialog_newconnection") {
+            @Override
+            protected void configure(Scene scene) {
+                scene.lookup("#localConnectionButton").setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        promptForLocalConnection();
+                        close();
+                    }
+                });
+
+                scene.lookup("#remoteConnectionButton").setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        promptForRemoteConnection();
+                        close();
+                    }
+                });
+            }
+        }.show();
+    }
+
+    private void promptForRemoteConnection() {
+
+        new PopupDialog(stage, "dialog_remoteconnection") {
+            @Override
+            protected void configure(Scene scene) {
+                TextField hostField = (TextField)scene.lookup("#hostAddressField");
+
+                scene.lookup("#connectButton").setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        String host = hostField.getText();
+                        if (host == null || host.trim().length() == 0) {
+                            return;
+                        }
+
+                        Database db = new Database(host, new RemoteConnection(host));
+
+                        boa.openDB(db);
+
+                        addConnection(db);
+
+                        close();
+                    }
+                });
+            }
+        }.show();
+    }
+
+    private void promptForLocalConnection() {
         // Prompt for the db file(s)
         List<File> list = fileChooser.showOpenMultipleDialog(stage);
         if (list != null) {
@@ -529,7 +572,6 @@ public class MainController implements StatementCompletionListener {
                 addConnection(db);
             }
         }
-
     }
 
     private Database getActiveDatabase() {

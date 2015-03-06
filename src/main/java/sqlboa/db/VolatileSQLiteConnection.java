@@ -5,7 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class VolatileSQLiteConnection extends DBConnection implements Serializable {
+public class VolatileSQLiteConnection extends LocalConnection implements Serializable {
 
 	static {
 		try {
@@ -36,6 +36,6 @@ public class VolatileSQLiteConnection extends DBConnection implements Serializab
 
 	@Override
 	public String getName() {
-		return "In Memory";
+		return "Scratch";
 	}
 }
