@@ -114,4 +114,11 @@ public class RemoteConnection implements DBConnection, Serializable {
             in = new Hessian2Input(socket.getInputStream());
         }
     }
+
+    @Override
+    public boolean isOK() {
+        // TODO: Do an ACK test
+        return true;
+    }
+
 }

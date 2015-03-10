@@ -669,29 +669,30 @@ public class MainController implements StatementCompletionListener {
 
     private TreeItem constructDBBranch(Database database) {
 
-        Exception error = null;
-        try {
-            database.refresh();
-        } catch (SQLException e) {
-            error = e;
-        }
-
-        ConnectionTreeNode details = new ConnectionTreeNode(database, error == null);
+        ConnectionTreeNode details = new ConnectionTreeNode(database);
         TreeItem connectionNode = new TreeItem(details);
 
 //        boolean isDefaultDatabase = appState.getDefaultDatabase().equals(database.getName());
 //        TreeBranch branch = new TreeBranch((isDefaultDatabase ? "* " : "" ) + database.getName());
 
-        if (details.isOK) {
-            connectionNode.getChildren().add(constructItemBranch(database, TreeItemType.TABLE, database.getTableList()));
-            connectionNode.getChildren().add(constructItemBranch(database, TreeItemType.TRIGGER, database.getTriggerList()));
-            connectionNode.getChildren().add(constructItemBranch(database, TreeItemType.INDEX, database.getIndexList()));
-        }
+        connectionNode.expandedProperty().addListener(e -> {
+            if (connectionNode.isExpanded()) {
+                if (database.isOK()) {
+                    connectionNode.getChildren().clear();
+                    connectionNode.getChildren().add(constructItemBranch(database, TreeItemType.TABLE));
+                    connectionNode.getChildren().add(constructItemBranch(database, TreeItemType.TRIGGER));
+                    connectionNode.getChildren().add(constructItemBranch(database, TreeItemType.INDEX));
+                }
+            }
+        });
+
+        // Put in a placeholder so that the node will be expandable.  It will be cleared on first expand
+        connectionNode.getChildren().add(new TreeItem());
 
         return connectionNode;
     }
 
-    private TreeItem constructItemBranch(Database db, TreeItemType type, List<String> itemList) {
+    private TreeItem constructItemBranch(Database db, TreeItemType type) {
 
         TypeTreeNode details = new TypeTreeNode(db, type);
 
@@ -702,14 +703,35 @@ public class MainController implements StatementCompletionListener {
             }
         };
 
-        for (String item : itemList) {
+        itemNode.expandedProperty().addListener(e -> {
 
-            ItemTreeNode itemDetails = new ItemTreeNode(db, item, type);
+            List<String> itemList = null;
+            switch (type) {
+                case TABLE:
+                    itemList = db.getTableList();
+                    break;
+                case TRIGGER:
+                    itemList = db.getTriggerList();
+                    break;
+                case INDEX:
+                    itemList = db.getIndexList();
+                    break;
+            };
 
-            TreeItem node = new TreeItem(itemDetails);
+            if (itemNode.isExpanded()) {
+                itemNode.getChildren().clear();
+                for (String item : itemList) {
+                    ItemTreeNode itemDetails = new ItemTreeNode(db, item, type);
 
-            itemNode.getChildren().add(node);
-        }
+                    TreeItem node = new TreeItem(itemDetails);
+
+                    itemNode.getChildren().add(node);
+                }
+            }
+        });
+
+        // Put in a dummy node so that the node will be expandable, it will be removed on first viewing
+        itemNode.getChildren().add(new TreeItem());
 
         return itemNode;
     }

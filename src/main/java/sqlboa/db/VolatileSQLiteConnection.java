@@ -38,4 +38,10 @@ public class VolatileSQLiteConnection extends LocalConnection implements Seriali
 	public String getName() {
 		return "Scratch";
 	}
+
+    @Override
+    public boolean isOK() {
+        return true;
+    }
+
 }

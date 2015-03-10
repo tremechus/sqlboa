@@ -135,4 +135,5 @@ public abstract class LocalConnection implements DBConnection {
 	protected abstract Connection connectInternal() throws SQLException;
 	protected abstract void disconnectInternal(Connection connection) throws SQLException;
 	public abstract String getName();
+
 }

@@ -8,11 +8,9 @@ import sqlboa.model.Database;
 public class ConnectionTreeNode {
 
     public Database db;
-    public boolean isOK;
 
-    public ConnectionTreeNode(Database db, boolean isOK) {
+    public ConnectionTreeNode(Database db) {
         this.db = db;
-        this.isOK = isOK;
     }
 
     @Override

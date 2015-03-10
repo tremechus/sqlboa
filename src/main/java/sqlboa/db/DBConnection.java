@@ -16,4 +16,5 @@ public interface DBConnection {
 	public void rawExec(String sql) throws SQLException;
 	public StatementResult exec(String sql, List<SqlParam> bindParams) throws SQLException;
 	public String getName();
+    public boolean isOK();
 }

@@ -42,4 +42,11 @@ public class SQLiteConnection extends LocalConnection implements Serializable {
 	public String getName() {
 		return file.getAbsolutePath();
 	}
+
+    @Override
+    public boolean isOK() {
+        // TODO: Handle sqlite failures?
+        return file.exists();
+    }
+
 }
