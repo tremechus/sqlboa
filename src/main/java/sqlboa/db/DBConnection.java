@@ -12,8 +12,8 @@ import java.util.List;
 
 public interface DBConnection {
 
-	public List<String> queryForStringList(String sql) throws SQLException;
-	public void rawExec(String sql) throws SQLException;
+	public List<String> list(String sql) throws SQLException;
+	public void exec(String sql) throws SQLException;
 	public StatementResult exec(String sql, List<SqlParam> bindParams) throws SQLException;
 	public String getName();
     public boolean isOK();

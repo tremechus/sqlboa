@@ -2,6 +2,9 @@ package sqlboa.db;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
+import jdk.nashorn.api.scripting.JSObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import sqlboa.Configuration;
 import sqlboa.model.ResultRow;
 import sqlboa.model.SqlParam;
@@ -13,6 +16,7 @@ import java.net.Socket;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,17 +33,27 @@ public class RemoteConnection implements DBConnection, Serializable {
     }
 
     @Override
-    public synchronized List<String> queryForStringList(String sql) throws SQLException {
+    public synchronized List<String> list(String sql) throws SQLException {
         try {
             ensureConnection();
 
-            out.writeString("queryForStringList");
-            out.writeString(sql);
+            JSONObject request = new JSONObject();
+            request.put("command", "list");
+            request.put("query", sql);
+            out.writeString(request.toString());
             out.flush();
 
-            List<String> response = (List<String>) in.readObject();
+            JSONObject response = new JSONObject(in.readString());
+            checkResponse(response);
 
-            return response;
+            JSONArray list = response.getJSONArray("list");
+            List<String> resultList = new ArrayList<>();
+
+            for (int i = 0; i < list.length(); i++) {
+                resultList.add(list.getString(i));
+            }
+
+            return resultList;
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -48,17 +62,18 @@ public class RemoteConnection implements DBConnection, Serializable {
     }
 
     @Override
-    public synchronized void rawExec(String sql) throws SQLException {
+    public synchronized void exec(String sql) throws SQLException {
         try {
             ensureConnection();
 
-            out.writeString("rawExec");
-            out.writeString(sql);
+            JSONObject request = new JSONObject();
+            request.put("command", "exec");
+            request.put("sql", sql);
+            out.writeString(request.toString());
             out.flush();
 
-            String response = in.readString();
-
-            // TODO: Check for error response
+            JSONObject response = new JSONObject(in.readString());
+            checkResponse(response);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -69,7 +84,7 @@ public class RemoteConnection implements DBConnection, Serializable {
     @Override
     public synchronized StatementResult exec(String sql, List<SqlParam> bindParams) throws SQLException {
 
-        List<Object> paramList = new ArrayList<>();
+        JSONArray paramList = new JSONArray();
 
         // Run substitutions
         for (int i = 1; i <= bindParams.size(); i++) {
@@ -79,20 +94,46 @@ public class RemoteConnection implements DBConnection, Serializable {
             if (param.isSubstitution()) {
                 sql = sql.replaceAll("\\{" + param.getKey() + "\\}", value != null ? value.toString() : "");
             } else {
-                paramList.add(value.toString());
+                paramList.put(value.toString());
             }
         }
 
         try {
             ensureConnection();
 
-            out.writeString("exec");
-            out.writeString(sql);
-            out.writeObject(paramList);
-            out.writeInt(Configuration.PAGE_SIZE);
+            JSONObject request = new JSONObject();
+            request.put("command", "query");
+            request.put("query", sql);
+            request.put("params", paramList);
+            request.put("page", 0);
+            request.put("perPage", Configuration.PAGE_SIZE);
+            out.writeString(request.toString());
             out.flush();
 
-            StatementResult result = (StatementResult) in.readObject();
+            JSONObject response = new JSONObject(in.readString());
+            checkResponse(response);
+
+            JSONArray columns = response.getJSONArray("columns");
+            String[] colNames = new String[columns.length()];
+            for (int i = 0; i < columns.length(); i++) {
+                colNames[i] = columns.getString(i);
+            }
+
+            StatementResult result = new StatementResult(colNames);
+            result.setTotalCount(response.optInt("totalCount", 0));
+
+            JSONArray rows = response.getJSONArray("rows");
+            for (int i = 0; i < rows.length(); i++) {
+                Object[] vals = new Object[colNames.length];
+
+                JSONArray rowVals = rows.getJSONArray(i);
+
+                for (int j = 0; j < vals.length; j++) {
+                    vals[j] = rowVals.get(j);
+                }
+
+                result.add(new ResultRow(i, vals));
+            }
 
             return result;
         } catch (IOException e) {
@@ -107,18 +148,47 @@ public class RemoteConnection implements DBConnection, Serializable {
     }
 
     private void ensureConnection() throws IOException {
-        if (socket == null || socket.isClosed()) {
-            socket = new Socket(host, 1234);
-
-            out = new Hessian2Output(socket.getOutputStream());
-            in = new Hessian2Input(socket.getInputStream());
+        // For now just create a new socket
+        if (socket != null) {
+            socket.close();
         }
+
+        socket = new Socket(host, 1234);
+
+        out = new Hessian2Output(socket.getOutputStream());
+        in = new Hessian2Input(socket.getInputStream());
     }
 
     @Override
     public boolean isOK() {
-        // TODO: Do an ACK test
-        return true;
+        try {
+            ensureConnection();
+
+            JSONObject request = new JSONObject();
+            request.put("command", "handshake");
+            out.writeString(request.toString());
+            out.flush();
+
+            JSONObject response = new JSONObject(in.readString());
+            checkResponse(response);
+
+            return true;
+        } catch (IOException|SQLException e) {
+            // Expected
+            System.out.println("Can't connect to " + getName());
+        }
+
+        return false;
+    }
+
+    private void checkResponse(JSONObject response) throws SQLException {
+        if (response == null) {
+            throw new SQLException("No response");
+        }
+
+        if (response.getInt("status") == 0) {
+            throw new SQLException("Error code " + response.getInt("code") + ": " + response.getString("message"));
+        }
     }
 
 }

@@ -4,7 +4,6 @@ import sqlboa.db.DBConnection;
 
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class Database implements Comparable<Database>, Serializable {
 	
 	public List<String> getTableList() {
         try {
-            List<String> tableList = connection.queryForStringList("select name from sqlite_master where type = 'table'");
+            List<String> tableList = connection.list("select name from sqlite_master where type = 'table'");
             Collections.sort(tableList);
             return tableList;
         } catch (SQLException e) {
@@ -37,7 +36,7 @@ public class Database implements Comparable<Database>, Serializable {
 	
 	public List<String> getTriggerList() {
         try {
-            List<String> triggerList = connection.queryForStringList("select name from sqlite_master where type = 'trigger'");
+            List<String> triggerList = connection.list("select name from sqlite_master where type = 'trigger'");
             Collections.sort(triggerList);
             return triggerList;
         } catch (SQLException e) {
@@ -48,7 +47,7 @@ public class Database implements Comparable<Database>, Serializable {
 	
 	public List<String> getIndexList() {
         try {
-            List<String> indexList = connection.queryForStringList("select name from sqlite_master where type = 'index'");
+            List<String> indexList = connection.list("select name from sqlite_master where type = 'index'");
             Collections.sort(indexList);
             return indexList;
         } catch (SQLException e) {
@@ -67,15 +66,15 @@ public class Database implements Comparable<Database>, Serializable {
 	}
 	
 	public void dropTrigger(String triggerName) throws SQLException {
-		connection.rawExec("drop trigger if exists " + triggerName);
+		connection.exec("drop trigger if exists " + triggerName);
 	}
 	
 	public void dropIndex(String indexName) throws SQLException {
-		connection.rawExec("drop index if exists " + indexName);
+		connection.exec("drop index if exists " + indexName);
 	}
 	
 	public void dropTable(String tableName) throws SQLException {
-		connection.rawExec("drop table if exists " + tableName);
+		connection.exec("drop table if exists " + tableName);
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import java.util.List;
 
 public abstract class LocalConnection implements DBConnection {
 
-	public List<String> queryForStringList(String sql) throws SQLException {
+	public List<String> list(String sql) throws SQLException {
 		Connection connection = null;
 		try {
 			connection = grabConnection();
@@ -31,7 +31,7 @@ public abstract class LocalConnection implements DBConnection {
 		}
 	}
 	
-	public void rawExec(String sql) throws SQLException {
+	public void exec(String sql) throws SQLException {
 		Connection connection = grabConnection();
 		try {
 			Statement stmt = connection.createStatement();

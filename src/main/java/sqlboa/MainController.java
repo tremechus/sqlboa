@@ -17,6 +17,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -33,10 +34,12 @@ import sqlboa.parser.StatementCompletionListener;
 import sqlboa.state.AppState;
 import sqlboa.util.StringUtil;
 import sqlboa.view.PopupDialog;
+import sun.reflect.generics.tree.Tree;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -106,6 +109,35 @@ public class MainController implements StatementCompletionListener {
         root.setExpanded(true);
         connectionTree.setRoot(root);
         connectionTree.setShowRoot(false);
+        connectionTree.setCellFactory(treeView -> {
+            final Label label = new Label();
+            final Label anotherLabel = new Label("Item:");
+            label.getStyleClass().add("highlight-on-hover");
+            final HBox hbox = new HBox(5, anotherLabel, label);
+            TreeCell cell =  new TreeCell() {
+                @Override
+                protected void updateItem(Object item, boolean empty) {
+                    super.updateItem(item, empty);
+
+                    if (empty || item == null) {
+                        setText(null);
+                        setGraphic(null);
+                    } else {
+                        setText(item.toString());
+                        setStyle("-fx-text-fill: #000000;");
+                        if (item instanceof ConnectionTreeNode) {
+                            if (!((ConnectionTreeNode)item).db.isOK()) {
+                                setStyle("-fx-text-fill: #ff0000;");
+                            }
+                        }
+                    }
+                }
+            };
+            cell.itemProperty().addListener((obs, oldItem, newItem) -> {
+                label.setText(newItem != null ? String.valueOf(newItem) : "");
+            });
+            return cell ;
+        });
 
         // Construct tree
         Collections.sort(dbList);
@@ -197,8 +229,21 @@ public class MainController implements StatementCompletionListener {
             root.getChildren().clear();
         }
 
-        root.getChildren().add(constructDBBranch(db)); // TODO: Check isOK value
+        root.getChildren().add(constructDBBranch(db));
 
+    }
+
+    public void refreshConnectionStatus() {
+
+        for (TreeItem connection : connectionTree.getRoot().getChildren()) {
+            if (connection.getValue() instanceof ConnectionTreeNode) {
+                ConnectionTreeNode connectionNode = (ConnectionTreeNode) connection.getValue();
+
+                if (connectionNode != null) {
+//                    connectionNode.db.isOK();
+                }
+            }
+        }
     }
 
     private void initSheetTabs() {
@@ -671,9 +716,6 @@ public class MainController implements StatementCompletionListener {
 
         ConnectionTreeNode details = new ConnectionTreeNode(database);
         TreeItem connectionNode = new TreeItem(details);
-
-//        boolean isDefaultDatabase = appState.getDefaultDatabase().equals(database.getName());
-//        TreeBranch branch = new TreeBranch((isDefaultDatabase ? "* " : "" ) + database.getName());
 
         connectionNode.expandedProperty().addListener(e -> {
             if (connectionNode.isExpanded()) {
