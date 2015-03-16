@@ -233,19 +233,6 @@ public class MainController implements StatementCompletionListener {
 
     }
 
-    public void refreshConnectionStatus() {
-
-        for (TreeItem connection : connectionTree.getRoot().getChildren()) {
-            if (connection.getValue() instanceof ConnectionTreeNode) {
-                ConnectionTreeNode connectionNode = (ConnectionTreeNode) connection.getValue();
-
-                if (connectionNode != null) {
-//                    connectionNode.db.isOK();
-                }
-            }
-        }
-    }
-
     private void initSheetTabs() {
         // Grab the + tab
         Tab addTab = sheetTabs.getTabs().get(sheetTabs.getTabs().size()-1);
@@ -529,7 +516,7 @@ public class MainController implements StatementCompletionListener {
 
     public void handleAboutMenu() {
 
-        new PopupDialog(stage, "dialog_about") {
+        new PopupDialog("About", stage, "dialog_about") {
             @Override
             protected void configure(Scene scene) {
                 Label label = (Label) scene.lookup("#versionLabel");
@@ -549,7 +536,7 @@ public class MainController implements StatementCompletionListener {
 
     public void handleAddNewConnection() {
 
-        new PopupDialog(stage, "dialog_newconnection") {
+        new PopupDialog("Add Connection", stage, "dialog_newconnection") {
             @Override
             protected void configure(Scene scene) {
                 scene.lookup("#localConnectionButton").setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -573,7 +560,7 @@ public class MainController implements StatementCompletionListener {
 
     private void promptForRemoteConnection() {
 
-        new PopupDialog(stage, "dialog_remoteconnection") {
+        new PopupDialog("Add Remote Connection", stage, "dialog_remoteconnection") {
             @Override
             protected void configure(Scene scene) {
                 TextField hostField = (TextField)scene.lookup("#hostAddressField");

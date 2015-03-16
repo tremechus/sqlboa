@@ -6,18 +6,17 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="168.0" prefWidth="212.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="261.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
    <padding>
       <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
    </padding>
    <children>
-      <Label text="Would you like to create a new" />
-      <Button id="localConnectionButton" mnemonicParsing="false" text="Local connection">
+      <Button id="localConnectionButton" minHeight="50.0" mnemonicParsing="false" text="Open an existing or create a new local database" wrapText="true">
          <VBox.margin>
-            <Insets top="20.0" />
+            <Insets />
          </VBox.margin>
       </Button>
-      <Button id="remoteConnectionButton" mnemonicParsing="false" text="Remote connection">
+      <Button id="remoteConnectionButton" minHeight="50.0" mnemonicParsing="false" text="Connect with an app or server using BoaConnector" wrapText="true">
          <VBox.margin>
             <Insets top="20.0" />
          </VBox.margin>

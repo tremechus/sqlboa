@@ -20,9 +20,11 @@ public class PopupDialog {
     private Stage parentStage;
     private Stage dialog;
     private Scene dialogScene;
+    private String title;
 
-    public PopupDialog(Stage parentStage, String bodyLayout) {
+    public PopupDialog(String title, Stage parentStage, String bodyLayout) {
         this.parentStage = parentStage;
+        this.title = title;
 
         try {
             if (!bodyLayout.endsWith(".fxml")) {
@@ -48,6 +50,9 @@ public class PopupDialog {
         dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initOwner(parentStage);
+        if (title != null) {
+            dialog.setTitle(title);
+        }
 
         dialog.setScene(dialogScene);
         dialog.sizeToScene();
