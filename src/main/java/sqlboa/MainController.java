@@ -327,11 +327,20 @@ public class MainController implements StatementCompletionListener {
             return;
         }
 
+        // Table in current db?
+        for (String tableName : db.getTableList()) {
+            if (word.equalsIgnoreCase(tableName)) {
+                boa.executeStatement(db, null, new BoaStatement("Table: " + tableName, "PRAGMA table_info(" + tableName +")", false), this);
+                return;
+            }
+        }
+
         // Reserved word?
         switch (word.toLowerCase()) {
             case "select":
             case "from":
             case "where":
+            default: // Until there is more intelligence here, just assume explain plan on the query
                 BoaStatement statement = currentTab.document.getStatementAt(textArea.getCaretPosition());
                 if (statement == null || !statement.isValid()) {
                     return;
@@ -343,13 +352,6 @@ public class MainController implements StatementCompletionListener {
                 return;
         }
 
-        // Table in current db?
-        for (String tableName : db.getTableList()) {
-            if (word.equalsIgnoreCase(tableName)) {
-                boa.executeStatement(db, null, new BoaStatement("Table: " + tableName, "PRAGMA table_info(" + tableName +")", false), this);
-                return;
-            }
-        }
     }
 
     public void addResult(String name, String detail, Node content, Object data) {
@@ -528,6 +530,22 @@ public class MainController implements StatementCompletionListener {
                 });
             }
         }.show();
+    }
+
+    public void handleNewSheetMenu() {
+        addSheet(createDefaultDocument());
+    }
+
+    public void handleExecuteStatementMenu() {
+        executeDocument(false);
+    }
+
+    public void handleExecuteSheetMenu() {
+        executeDocument(true);
+    }
+
+    public void handleExplainMenu() {
+        explainCurrentContext();
     }
 
     public void handleExitMenu() {
