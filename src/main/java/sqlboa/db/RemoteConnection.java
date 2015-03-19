@@ -22,11 +22,16 @@ import java.util.List;
 
 public class RemoteConnection implements DBConnection, Serializable {
 
+    private static final int ISOK_DURATION = 1000 * 10; // Duration between isOK checks
+
     private String host;
 
     private transient Socket socket;
     private transient Hessian2Output out;
     private transient Hessian2Input in;
+
+    private transient boolean isOK;
+    private transient long lastOKCheck;
 
     public RemoteConnection(String host) {
         this.host = host;
@@ -161,6 +166,13 @@ public class RemoteConnection implements DBConnection, Serializable {
 
     @Override
     public boolean isOK() {
+
+        if (System.currentTimeMillis() - lastOKCheck < ISOK_DURATION) {
+            return isOK;
+        }
+
+        lastOKCheck = System.currentTimeMillis();
+        isOK = false;
         try {
             ensureConnection();
 
@@ -172,13 +184,13 @@ public class RemoteConnection implements DBConnection, Serializable {
             JSONObject response = new JSONObject(in.readString());
             checkResponse(response);
 
-            return true;
+            isOK = true;
         } catch (IOException|SQLException e) {
             // Expected
             System.out.println("Can't connect to " + getName());
         }
 
-        return false;
+        return isOK;
     }
 
     private void checkResponse(JSONObject response) throws SQLException {

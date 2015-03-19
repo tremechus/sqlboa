@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class SqlTextArea extends StyleClassedTextArea {
 
     private static final String[] KEYWORDS = new String[] {
-            "select", "from", "where", "insert", "update", "delete", "table", "index", "trigger", "like", "join", "left", "inner"
+            "select", "from", "where", "insert", "update", "delete", "table", "create", "index", "trigger", "like", "join", "left", "inner"
     };
 
     private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
@@ -32,7 +32,8 @@ public class SqlTextArea extends StyleClassedTextArea {
                     + "|(?<BRACE>" + BRACE_PATTERN + ")"
                     + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
                     + "|(?<STRING>" + STRING_PATTERN + ")"
-                    + "|(?<VARIABLE>"+VARIABLE_PATTERN + ")"
+                    + "|(?<VARIABLE>"+VARIABLE_PATTERN + ")",
+            Pattern.CASE_INSENSITIVE
     );
 
     private static ExecutorService executor;
@@ -48,7 +49,7 @@ public class SqlTextArea extends StyleClassedTextArea {
 //        setParagraphGraphicFactory(LineNumberFactory.get(this));
         EventStream<PlainTextChange> textChanges = plainTextChanges();
         textChanges
-                .successionEnds(Duration.ofMillis(250))
+                .successionEnds(Duration.ofMillis(100))
                 .supplyTask(this::computeHighlightingAsync)
                 .awaitLatest(textChanges)
                 .map(Try::get)

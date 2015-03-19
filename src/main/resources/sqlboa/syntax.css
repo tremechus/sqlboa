@@ -2,6 +2,7 @@
     -fx-fill: darkblue;
     -fx-font-weight: bold;
 }
+<!--
 .paren {
     -fx-fill: firebrick;
     -fx-font-weight: bold;
@@ -14,6 +15,7 @@
     -fx-fill: teal;
     -fx-font-weight: bold;
 }
+-->
 .string {
     -fx-fill: blue;
 }

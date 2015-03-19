@@ -262,20 +262,6 @@ public class MainController implements StatementCompletionListener {
     public Tab addSheet(final BoaDocument doc) {
 
         SqlTextArea text = new SqlTextArea(doc.getBody());
-        text.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if (event.isControlDown() && event.getCode() == KeyCode.ENTER) {
-                    executeDocument(false);
-                }
-                if (event.isControlDown() && event.getCode() == KeyCode.R) {
-                    executeDocument(true);
-                }
-                if (event.isControlDown() && event.getCode() == KeyCode.E) {
-                    explainCurrentContext();
-                }
-            }
-        });
         text.textProperty().addListener(new DocumentChangeListener(doc));
 
         Tab tab = new DocumentTab(doc.getName(), doc);
