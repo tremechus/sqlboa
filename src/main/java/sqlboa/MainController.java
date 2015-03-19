@@ -12,14 +12,11 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import name.antonsmirnov.javafx.dialog.Dialog;
 import sqlboa.db.RemoteConnection;
@@ -34,15 +31,12 @@ import sqlboa.parser.StatementCompletionListener;
 import sqlboa.state.AppState;
 import sqlboa.util.StringUtil;
 import sqlboa.view.PopupDialog;
-import sun.reflect.generics.tree.Tree;
+import sqlboa.view.SqlTextArea;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -267,10 +261,10 @@ public class MainController implements StatementCompletionListener {
 
     public Tab addSheet(final BoaDocument doc) {
 
-        TextArea text = new TextArea();
+        SqlTextArea text = new SqlTextArea(doc.getBody());
         text.setOnKeyPressed(new EventHandler<KeyEvent>() {
-                @Override
-                public void handle(KeyEvent event) {
+            @Override
+            public void handle(KeyEvent event) {
                 if (event.isControlDown() && event.getCode() == KeyCode.ENTER) {
                     executeDocument(false);
                 }
@@ -283,7 +277,6 @@ public class MainController implements StatementCompletionListener {
             }
         });
         text.textProperty().addListener(new DocumentChangeListener(doc));
-        text.setText(doc.getBody());
 
         Tab tab = new DocumentTab(doc.getName(), doc);
         tab.setContent(text);
@@ -664,7 +657,7 @@ public class MainController implements StatementCompletionListener {
             return;
         }
 
-        TextArea textArea = (TextArea) currentTab.getContent();
+        SqlTextArea textArea = (SqlTextArea) currentTab.getContent();
 
         // Execute
         BoaStatement statement = null;

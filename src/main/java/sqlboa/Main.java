@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import sqlboa.state.AppState;
+import sqlboa.view.SqlTextArea;
 
 public class Main extends Application {
 
@@ -29,10 +30,19 @@ public class Main extends Application {
         appState = AppState.restore();
         boa = new SQLBoa(appState, primaryStage);
 
+        SqlTextArea.start();
+
         controller = loader.getController();
         controller.init(this, boa, appState, primaryStage);
 
         primaryStage.show();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+
+        SqlTextArea.stop();
     }
 
     public static void main(String[] args) {

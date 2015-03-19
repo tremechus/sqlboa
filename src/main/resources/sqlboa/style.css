@@ -9,7 +9,14 @@
     -fx-opacity: 0;
 }
 
-.text-area {
+.styled-text-area .paragraph-box .paragraph-text {
+    -fx-padding: 0 2px;
+}
+
+.styled-text-area {
     -fx-border-radius: 5 5 5 5;
     -fx-border-color: #cfcfcf;
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 5 5 5 5;
+    -fx-padding: 10 10 10 10;
 }
